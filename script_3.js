@@ -17,19 +17,37 @@ const getCollections_DB = async () => { /* função para devolver lista de colle
 
 const listar_Documents = async (coll_name) => { /* função para listar a collections da Db */
     console.clear();
-    const l_docs = await dB.collection(coll_name).find().toArray();
-    if(l_docs.length > 0){
-        console.table(l_docs);
+    inquirer.prompt([
+        {type:"rawlist",
+        name:"opt",
+        message:"Escolha a Opção",
+        choices:["Todos","Segundo Critério"]
+        }
+    ]
+    ).then(async(answers) =>{
+        switch(answers.opt){
+            case "Todos":
+                l_docs = await dB.collection(coll_name).find().toArray();
+                break;
+            case "Todos":
+                const criterio = obtem_criterio();
+                l_docs = await dB.collection(coll_name).find(criterio).toArray();
+                break;
+            default:
+                l_docs = await dB.collection(coll_name).find().toArray();
+                break;
+        }
+        if(l_docs.length > 0){
+            console.table(l_docs);
+        }
+        else{console.log("Não existem Documents para Listar!");}
+        opcoes();
     }
-    else{console.log("Não existem Documents para Listar!");}
-    opcoes();
+    ).catch((error) => console.log(error));
 }
 
 const cria_Document = (coll_name) => { /* função para criar uma collections da Db */
-    flag_sair = false;
     console.clear();
-    const nome_inq = ""
-    const apelido_inq = ""
     inquirer.prompt([
         {type:"input",
         name:"nome",
@@ -39,10 +57,14 @@ const cria_Document = (coll_name) => { /* função para criar uma collections da
         name:"apelido",
         message:"Indicar Apelido:"
         },
+        {type:"input",
+        name:"idade",
+        message:"Indicar Idade:"
+        },
     ]
     ).then(async(answers) =>{
         const inputs = await recolhe_contactos();
-        const cont_doc = {nome:answers.nome,apelido:answers.apelido,contacts:inputs};
+        const cont_doc = {nome:answers.nome,apelido:answers.apelido,idade:parseInt(answers.idade),contacts:inputs};
         console.log(cont_doc);
         insere_Document(coll_name,cont_doc)
         opcoes();
@@ -77,7 +99,7 @@ const recolhe_contactos = async (inputs = []) => {
 
 const insere_Document = async (coll_name,data_document) => { /* função para criar uma collections da Db */
     res = await dB.collection(coll_name).insertOne(data_document);
-    console.log(res);
+    console.log("Foram inseridos - "+res.insertedCount+" documentos...");
 }
 
 const apaga_Documents = async (coll_name) =>{
@@ -87,11 +109,25 @@ const apaga_Documents = async (coll_name) =>{
         name:"nome",
         message:"Indicar Nome Contacto:"
         },
+        {type:"rawlist",
+        name:"opt",
+        message:"Escolha a Opção",
+        choices:["Apagar 1","Apagar Vários"]
+        }
     ]
     ).then(async(answers) =>{
-        const cont_doc = {nome:answers.nome,tip_cont:answers.tip_cont,contacto:answers.contacto}
-        res = await dB.collection(coll_name).deleteOne({nome:answers.nome});
-        console.log(res);
+        switch(answers.opt){
+            case "Apagar 1":
+                res = await dB.collection(coll_name).deleteOne({nome:answers.nome});
+                break;
+            case "Apagar Vários":
+                res = await dB.collection(coll_name).deleteMany({nome:answers.nome});
+                break;
+            default:
+                res = await dB.collection(coll_name).deleteOne({nome:answers.nome});
+                break;
+        }
+        console.log("Foram apagados - "+res.deletedCount+" documentos...");
         opcoes();
     }
     ).catch((error) => console.log(error))
