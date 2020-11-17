@@ -29,7 +29,7 @@ const listar_Documents = async (coll_name) => { /* função para listar a collec
             case "Todos":
                 l_docs = await dB.collection(coll_name).find().toArray();
                 break;
-            case "Todos":
+            case "Segundo Critério":
                 const criterio = obtem_criterio();
                 l_docs = await dB.collection(coll_name).find(criterio).toArray();
                 break;
